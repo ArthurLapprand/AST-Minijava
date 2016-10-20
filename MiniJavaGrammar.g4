@@ -23,7 +23,7 @@ statement : '{'(statement)*'}' |
  	IDENTIFIER '=' expression';' |
  	IDENTIFIER '['expression']' '=' expression ';';
 
-expression : expression ('&&'|'<'|'+'|'-'|'*') expression |
+expression : expression OP expression |
 	expression '['expression']'|
 	expression '.' 'length'|
 	expression '.' IDENTIFIER '('(expression (','expression)*)?')'|
@@ -39,6 +39,8 @@ expression : expression ('&&'|'<'|'+'|'-'|'*') expression |
 
 INTEGER :  ('-')?[0-9]+;
 
-IDENTIFIER : ([a-zA-Z] | '_')+;
+IDENTIFIER : ([a-zA-Z] | '_' | [0-9])+;
+
+OP : ('&&'|'<'|'+'|'-'|'*');
 
 SPACE : [ \r\n\t]+ -> skip;

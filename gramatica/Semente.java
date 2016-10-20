@@ -10,7 +10,7 @@ import gramatica.MiniJavaGrammarParser.*;
 
 public class Semente {
 
-	public Program goal(GoalContext g) {
+	public Program getProgram(GoalContext g) {
 		MainClass m = this.visitMain(g.mainClass());
 		ClassDeclList l = this.visitClassDeclList(g.classDeclaration());
 		Program p = new Program(m, l);
@@ -82,55 +82,64 @@ public class Semente {
 	public Exp visitExpression(ExpressionContext ec) {
 		Exp e = null;
 		List<ExpressionContext> ecl = ec.expression();
+		TerminalNode operators = ec.OP();
 		TerminalNode tn = ec.IDENTIFIER();
 		TerminalNode integer = ec.INTEGER();
 		String s = ec.getText();
+		String op = null;
+		if (operators != null) op = operators.getText();
 		
-		if (s.contains("&&")) {
-			
-			e = new And(this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
-			
-		} else if (s.contains("<")) {
-			
-			e = new LessThan(this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
-			
-		} else if (s.contains("+")) {
-			
-			e = new Plus(this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
-			
-		} else if (s.contains("-")) {
-			
-			e = new Minus(this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
-			
-		} else if (s.contains("*")) {
-			
-			e = new Times(this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
-			
-		} else if (integer != null) {
-			
-			e = new IntegerLiteral(Integer.parseInt(integer.getText()));
-			
-		} else if (ecl.size() == 2) {
+		if (op != null) {
+			if (op.equals("&&")) {
+				
+				e = new And(this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
+				
+			} else if (op.equals("<")) {
+				
+				e = new LessThan(this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
+				
+			} else if (op.equals("+")) {
+				
+				e = new Plus(this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
+				
+			} else if (op.equals("-")) {
+				
+				e = new Minus(this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
+				
+			} else if (op.equals("*")) {
+				
+				e = new Times(this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
+				
+			}
+		} else if (ecl.size() == 2 && (tn == null)) {
 			
 			e = new ArrayLookup(this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
-			
-		} else if ((ecl.size() >= 1) && (tn != null)) {
-			
-			e = new Call(this.visitExpression(ecl.get(0)), new Identifier(tn.getText()), this.visitExpressionList(ecl.get(1)));
 			
 		} else if (s.contains("length")) {
 			
 			e = new ArrayLength(this.visitExpression(ecl.get(0)));
 			
-		} else if (s.contains("true")) {
+		} else if ((ecl.size() >= 1) && (tn != null)) {
+			
+			e = new Call(this.visitExpression(ecl.get(0)), new Identifier(tn.getText()), this.visitExpressionList(ecl.get(1)));
+			
+		} else if (integer != null) {
+			
+			e = new IntegerLiteral(Integer.parseInt(integer.getText()));
+			
+		} else if (s.equals("true")) {
 			
 			e = new True();
 			
-		} else if (s.contains("false")) {
+		} else if (s.equals("false")) {
 			
 			e = new False();
 			
-		} else if (s.contains("this")) {
+		} else if (ecl.size() == 0 && tn != null) {
+			
+			e = new IdentifierExp(tn.getText());
+			
+		} else if (s.equals("this")) {
 			
 			e = new This();
 			
@@ -148,7 +157,11 @@ public class Semente {
 			
 			e = new Not(this.visitExpression(ecl.get(0)));
 			
-		} else e = this.visitExpression(ecl.get(0));
+		} else {
+			
+			e = this.visitExpression(ecl.get(0));
+			
+		}
 		
 		return e;
 	}
@@ -164,7 +177,7 @@ public class Semente {
 
 	public ClassDeclList visitClassDeclList(List<ClassDeclarationContext> cl) {
 		ClassDeclList cdl = new ClassDeclList();
-		for( int i = 0; 1 < cl.size(); i++) {
+		for( int i = 0; i < cl.size(); i++) {
 			cdl.addElement(this.visitClassDecl(cl.get(i)));
 		}
 		return cdl;
@@ -185,7 +198,7 @@ public class Semente {
 	public VarDeclList visitVarDeclList(List<VarDeclarationContext> vdcl){
 		VarDeclList novovdcl = new VarDeclList();
 		//memo troco do de cima
-		for(int i = 0; 1 < vdcl.size(); i++) {
+		for(int i = 0; i < vdcl.size(); i++) {
 			novovdcl.addElement(this.visitVarDecl(vdcl.get(i)));
 		}
 		return novovdcl;
@@ -218,7 +231,7 @@ public class Semente {
 	public MethodDeclList visitMethodDeclarationList(List<MethodDeclarationContext> mdc){
 		MethodDeclList novomdc = new MethodDeclList();
 		//memo troco do de cima cima
-		for(int i=0; 1<mdc.size();i++){
+		for(int i=0; i < mdc.size();i++){
 			novomdc.addElement(this.visitMethodDecl(mdc.get(i)));
 		}
 		return novomdc;
@@ -246,7 +259,10 @@ public class Semente {
 			//pega as variaveis
 			VarDeclList variaveis = this.visitVarDeclList(mdc.varDeclaration());
 			//pega os statements
-			StatementList statements = this.visitStatementList(mdc.statement(0));
+			StatementList statements = new StatementList();
+			if (mdc.statement(0) != null) {
+				statements = this.visitStatementList(mdc.statement(0));
+			}
 			//pega a expression
 			Exp exp = this.visitExpression(mdc.expression());
 			//cria o retorno

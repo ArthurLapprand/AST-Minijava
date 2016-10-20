@@ -23,7 +23,7 @@ public class Teste {
 		MiniJavaGrammarParser pars = new MiniJavaGrammarParser(tok);
 		//ParseTree tree = pars.goal();
 		Semente s = new Semente();
-		Program p = s.goal(pars.goal());
+		Program p = s.getProgram(pars.goal());
 		PrettyPrintVisitor ppv = new PrettyPrintVisitor();
 		p.accept(ppv);
 		
