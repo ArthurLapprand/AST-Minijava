@@ -15,7 +15,7 @@ import visitor.PrettyPrintVisitor;
 public class Teste {
 
 	public static void main(String[] args) throws IOException {
-		File f1 = new File("C:\\Users\\Lapp\\Desktop\\AST MiniJava\\testes\\Factorial.txt");
+		File f1 = new File("C:\\Users\\Lapp\\Desktop\\AST MiniJava\\testes\\BinarySearch.txt");
 		FileInputStream f = new FileInputStream(f1);
 		ANTLRInputStream in = new ANTLRInputStream(f);
 		MiniJavaGrammarLexer lex = new MiniJavaGrammarLexer(in);

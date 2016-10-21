@@ -1,5 +1,6 @@
 package gramatica;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,16 +32,18 @@ public class Semente {
 		List<StatementContext> scl = sc.statement();
 		TerminalNode tn = sc.IDENTIFIER();
 		List<ExpressionContext> ecl = sc.expression();
-
-		if ((scl.size() == 1) && (ecl.size() == 1)) {
+		String str = sc.getText();
+		
+		//if ((scl.size() == 1) && (ecl.size() == 1)) {
+		if (str.contains("while")) {
 			// WHILE
 			s = this.visitWhile(ecl.get(0), scl.get(0));
 
-		} else if ((scl.size() == 2) && (ecl.size() == 1)) {
+		} else if (str.contains("if")) {//else if ((scl.size() == 2) && (ecl.size() == 1)) {
 			// IF
 			s = this.visitIf(ecl.get(0), scl.get(0), scl.get(1));
 
-		} else if ((scl.size() == 0) && (ecl.size() == 1) && (tn == null)) {
+		} else if (str.contains("System.out.println")) {//else if ((scl.size() == 0) && (ecl.size() == 1) && (tn == null)) {
 			// SYSTEM.OUT.PRINTLN
 			s = new Print(this.visitExpression(ecl.get(0)));
 
@@ -52,14 +55,15 @@ public class Semente {
 			// ATRIBUICAO DE ARRAY
 			s = new ArrayAssign(new Identifier(tn.getText()), this.visitExpression(ecl.get(0)), this.visitExpression(ecl.get(1)));
 		
-		} else s = new Block(this.visitStatementList(scl.get(0)));
+		} else s = new Block(this.visitStatementList(scl));
 		
 		return s;
+		
 	}
 	
-	public StatementList visitStatementList(StatementContext sc) {
+	public StatementList visitStatementList(List<StatementContext> sc) {
 		StatementList sl = new StatementList();
-		List<StatementContext> l = sc.statement();
+		List<StatementContext> l = sc;
 		for (int i = 0; i < l.size(); i++) {
 			sl.addElement(this.visitStatement(l.get(i)));
 		}
@@ -120,8 +124,11 @@ public class Semente {
 			e = new ArrayLength(this.visitExpression(ecl.get(0)));
 			
 		} else if ((ecl.size() >= 1) && (tn != null)) {
-			
-			e = new Call(this.visitExpression(ecl.get(0)), new Identifier(tn.getText()), this.visitExpressionList(ecl.get(1)));
+			List<ExpressionContext> ecl2 = new ArrayList<ExpressionContext>();
+			for (int i = 1; i < ecl.size(); i++) {
+				ecl2.add(ecl.get(i));
+			}
+			e = new Call(this.visitExpression(ecl.get(0)), new Identifier(tn.getText()), this.visitExpressionList(ecl2));
 			
 		} else if (integer != null) {
 			
@@ -135,7 +142,7 @@ public class Semente {
 			
 			e = new False();
 			
-		} else if (ecl.size() == 0 && tn != null) {
+		} else if (ecl.size() == 0 && tn != null && !s.contains("new") && !s.contains("(") && !s.contains(")")) {
 			
 			e = new IdentifierExp(tn.getText());
 			
@@ -166,11 +173,10 @@ public class Semente {
 		return e;
 	}
 	
-	public ExpList visitExpressionList(ExpressionContext ec) {
-		List<ExpressionContext> ecl = ec.expression();
+	public ExpList visitExpressionList(List<ExpressionContext> ec) {
 		ExpList expl = new ExpList();
-		for (int i = 0; i < ecl.size(); i++) {
-			expl.addElement(this.visitExpression(ecl.get(i)));
+		for (int i = 0; i < ec.size(); i++) {
+			expl.addElement(this.visitExpression(ec.get(i)));
 		}
 		return expl;
 	}
@@ -188,9 +194,9 @@ public class Semente {
 		ClassDecl cd;
 		//checando os tipo de implementacao se tem extends
 		if (identificadores.size() < 2){
-			cd = new ClassDeclSimple(new Identifier(identificadores.get(0).toString()), this.visitVarDeclList(cdc.varDeclaration()), this.visitMethodDeclarationList(cdc.methodDeclaration()));
+			cd = new ClassDeclSimple(new Identifier(identificadores.get(0).getText()), this.visitVarDeclList(cdc.varDeclaration()), this.visitMethodDeclarationList(cdc.methodDeclaration()));
 		} else {
-			cd = new ClassDeclExtends(new Identifier(identificadores.get(0).toString()), new Identifier(identificadores.get(3).toString()), this.visitVarDeclList(cdc.varDeclaration()),  this.visitMethodDeclarationList(cdc.methodDeclaration()));
+			cd = new ClassDeclExtends(new Identifier(identificadores.get(0).getText()), new Identifier(identificadores.get(3).getText()), this.visitVarDeclList(cdc.varDeclaration()),  this.visitMethodDeclarationList(cdc.methodDeclaration()));
 		}
 		return cd;
 	}
@@ -252,17 +258,14 @@ public class Semente {
 
 			Identifier nomeMetodo = new Identifier(identificadores.get(0).getText());
 			//formais estaticos, eles sao um tipo e um identificador
-			for(int i = 1; i< listaTipos.size();i++){
+			for(int i = 0; i < listaTipos.size(); i++){
 				formais.addElement(new Formal(this.visitType(listaTipos.get(i)),new Identifier(identificadores.get(i).getText())));
 
 			}
 			//pega as variaveis
 			VarDeclList variaveis = this.visitVarDeclList(mdc.varDeclaration());
 			//pega os statements
-			StatementList statements = new StatementList();
-			if (mdc.statement(0) != null) {
-				statements = this.visitStatementList(mdc.statement(0));
-			}
+			StatementList statements = this.visitStatementList(mdc.statement());
 			//pega a expression
 			Exp exp = this.visitExpression(mdc.expression());
 			//cria o retorno
