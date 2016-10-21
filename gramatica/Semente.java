@@ -32,18 +32,16 @@ public class Semente {
 		List<StatementContext> scl = sc.statement();
 		TerminalNode tn = sc.IDENTIFIER();
 		List<ExpressionContext> ecl = sc.expression();
-		String str = sc.getText();
 		
-		//if ((scl.size() == 1) && (ecl.size() == 1)) {
-		if (str.contains("while")) {
+		if ((scl.size() == 1) && (ecl.size() == 1)) {
 			// WHILE
 			s = this.visitWhile(ecl.get(0), scl.get(0));
 
-		} else if (str.contains("if")) {//else if ((scl.size() == 2) && (ecl.size() == 1)) {
+		} else if ((scl.size() == 2) && (ecl.size() == 1)) {
 			// IF
 			s = this.visitIf(ecl.get(0), scl.get(0), scl.get(1));
 
-		} else if (str.contains("System.out.println")) {//else if ((scl.size() == 0) && (ecl.size() == 1) && (tn == null)) {
+		} else if ((scl.size() == 0) && (ecl.size() == 1) && (tn == null)) {
 			// SYSTEM.OUT.PRINTLN
 			s = new Print(this.visitExpression(ecl.get(0)));
 
@@ -258,7 +256,7 @@ public class Semente {
 
 			Identifier nomeMetodo = new Identifier(identificadores.get(0).getText());
 			//formais estaticos, eles sao um tipo e um identificador
-			for(int i = 0; i < listaTipos.size(); i++){
+			for(int i = 1; i < listaTipos.size(); i++){
 				formais.addElement(new Formal(this.visitType(listaTipos.get(i)),new Identifier(identificadores.get(i).getText())));
 
 			}
