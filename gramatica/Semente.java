@@ -226,7 +226,7 @@ public class Semente {
 			t = new IntArrayType();
 		} else if(aux.equals("int")) {
 			t = new IntegerType();
-		} else {
+		} if (identificador != null) {
 			t = new IdentifierType(identificador.getText());
 		}
 		return t;
